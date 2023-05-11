@@ -138,7 +138,7 @@ int main()
 	pSourceVoice->Start(0);
 
 	// 再生後にフェードイン
-	FadeIn(pSourceVoice, 1.0, 100);
+	FadeIn(pSourceVoice, 1.0f, 100);
 
 	// ここまで完了したら文字列を表示
 	printf_s("SoundFile.wavを再生中");
@@ -172,7 +172,7 @@ int main()
 		// maxTimeを過ぎたらフェードアウトする
 		if (nowTime > maxTime)
 		{
-			FadeOut(pSourceVoice, 0.0, 100);
+			FadeOut(pSourceVoice, 0.0f, 100);
 		}
 
 		// バッファー数が0になる、もしくはフェードが完了したらループ抜ける
