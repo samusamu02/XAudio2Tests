@@ -61,9 +61,41 @@ void FadeOut(IXAudio2SourceVoice* pSourceVoice, float endVolume, UINT32 fadeDura
 	pSourceVoice->SetVolume(endVolume);
 }
 
+/// <summary>
+/// パン
+/// </summary>
+/// <param name="pSourceVoice">ソースボイス</param>
+/// <param name="pan">パンの値</param>
+void SetStereoPan(IXAudio2SourceVoice* pSourceVoice, float pan)
+{
+	// パンの値
+	pan = max(-1.0f, min(pan,1.0f));
+
+	// パンの値に基づいて音声を分割する係数を計算
+	float leftVolume = sqrtf(1.0f - (pan * 0.5f + 0.5f));
+	float rigtVolume = sqrtf(1.0f + (pan * 0.5f - 0.5f));
+
+	//パンの設定をソースボイスに適用
+	XAUDIO2_VOICE_DETAILS details;
+	pSourceVoice->GetVoiceDetails(&details);
+
+	if (details.InputChannels == 2)
+	{
+		float matrix[] =
+		{
+			leftVolume,
+			0.0f,
+			0.0f,
+			rigtVolume
+		};
+
+		pSourceVoice->SetOutputMatrix(nullptr, details.InputChannels, 2, matrix);
+	}
+}
+
 int main()
 {
-	printf_s("フェードテスト\n");
+	printf_s("パニングテスト\n");
 
 	// COMの初期化
 	CoInitializeEx(nullptr, COINIT_MULTITHREADED);		
@@ -92,6 +124,9 @@ int main()
 	IXAudio2SourceVoice* pSourceVoice{ nullptr };
 	pXAudio2->CreateSourceVoice(&pSourceVoice, waveData.wfx);
 
+	// パンの初期値
+	SetStereoPan(pSourceVoice,0.0f);
+
 	// 音声データのセット
 	XAUDIO2_BUFFER buffer{ 0 };
 	buffer.pAudioData = waveData.startAudio;
@@ -108,20 +143,31 @@ int main()
 	// ここまで完了したら文字列を表示
 	printf_s("SoundFile.wavを再生中");
 
+	// パンの設定
+	float pan = 0.0f;		// パンの値
+	float speed = -0.1f;	// 左右に揺らすスピード(左から右へ)
+
 	// 終了まで待機　
 	while (true)
 	{
-		XAUDIO2_VOICE_STATE state;
-		pSourceVoice->GetState(&state);
-
-		XAUDIO2_VOICE_DETAILS details;
-		pSourceVoice->GetVoiceDetails(&details);
+		// 音を左右に揺らす
+		pan += speed;
+		if (pan >= 1.0f || pan <= -1.0f)
+		{
+			speed = -speed;
+			pan += speed;
+		}
+		SetStereoPan(pSourceVoice, pan);
 
 		// 現在の再生時間を求める
+		XAUDIO2_VOICE_STATE state;
+		pSourceVoice->GetState(&state);
+		XAUDIO2_VOICE_DETAILS details;
+		pSourceVoice->GetVoiceDetails(&details);
 		double nowTime = static_cast<double>(state.SamplesPlayed / details.InputSampleRate);
 
 		// どこまで再生するか
-		double maxTime = 9.0;
+		double maxTime = 5.0;
 
 		// maxTimeを過ぎたらフェードアウトする
 		if (nowTime > maxTime)

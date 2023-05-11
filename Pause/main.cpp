@@ -61,9 +61,14 @@ void FadeOut(IXAudio2SourceVoice* pSourceVoice, float endVolume, UINT32 fadeDura
 	pSourceVoice->SetVolume(endVolume);
 }
 
+void SetPitch(IXAudio2SourceVoice* pSouceVoice, float pitch)
+{
+	pSouceVoice->SetFrequencyRatio(pitch);
+}
+
 int main()
 {
-	printf_s("フェードテスト\n");
+	printf_s("ピッチ変更テスト\n");
 
 	// COMの初期化
 	CoInitializeEx(nullptr, COINIT_MULTITHREADED);		
@@ -92,6 +97,9 @@ int main()
 	IXAudio2SourceVoice* pSourceVoice{ nullptr };
 	pXAudio2->CreateSourceVoice(&pSourceVoice, waveData.wfx);
 
+	// ピッチの初期設定
+	SetPitch(pSourceVoice, 1.0);
+
 	// 音声データのセット
 	XAUDIO2_BUFFER buffer{ 0 };
 	buffer.pAudioData = waveData.startAudio;
@@ -107,10 +115,23 @@ int main()
 
 	// ここまで完了したら文字列を表示
 	printf_s("SoundFile.wavを再生中");
+	
+	// ピッチの設定
+	float pitch = 1.0f;		// ピッチの値
+	float speed = 0.01f;	// ピッチを上下させるスピード
 
 	// 終了まで待機　
 	while (true)
 	{
+		// ピッチを上下させる
+		pitch += speed;
+		if (pitch >= 1.5f || pitch <= 0.0f)
+		{
+			speed = -speed;
+			pitch += speed;
+		}
+		SetPitch(pSourceVoice, pitch);
+
 		// 現在の再生時間を求める
 		XAUDIO2_VOICE_STATE state;
 		pSourceVoice->GetState(&state);
