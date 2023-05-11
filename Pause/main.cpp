@@ -61,14 +61,45 @@ void FadeOut(IXAudio2SourceVoice* pSourceVoice, float endVolume, UINT32 fadeDura
 	pSourceVoice->SetVolume(endVolume);
 }
 
-void SetPitch(IXAudio2SourceVoice* pSouceVoice, float pitch)
+// 再生位置保持（解除にも使うため）
+UINT32 pausedPlayCursor;
+
+/// <summary>
+/// 一時停止
+/// </summary>
+/// <param name="pSourceVoice">ソースボイス</param>
+void Pause(IXAudio2SourceVoice* pSourceVoice)
 {
-	pSouceVoice->SetFrequencyRatio(pitch);
+	XAUDIO2_VOICE_STATE state;
+	pSourceVoice->GetState(&state);
+
+	// 再生位置を保持しておく
+	pausedPlayCursor = state.SamplesPlayed;
+
+	// 再生を停止する
+	pSourceVoice->Stop();
+
+	// 再生位置をメンバ変数に保持しておく
+	pausedPlayCursor = pausedPlayCursor;
+}
+
+/// <summary>
+/// 一時停止解除
+/// </summary>
+/// <param name="pSourceVoice">ソースボイス</param>
+/// <param name="buffer">バッファー</param>
+void Resume(IXAudio2SourceVoice* pSourceVoice, XAUDIO2_BUFFER buffer)
+{
+	// 再生を解除する
+	pSourceVoice->Start(0, XAUDIO2_COMMIT_NOW);
+
+	// 停止した位置から再生する
+	pSourceVoice->SubmitSourceBuffer(&buffer);
 }
 
 int main()
 {
-	printf_s("ピッチ変更テスト\n");
+	printf_s("一時停止テスト\nスペースキーで一時停止\nエンターキーで一時停止解除\n");
 
 	// COMの初期化
 	CoInitializeEx(nullptr, COINIT_MULTITHREADED);		
@@ -97,9 +128,6 @@ int main()
 	IXAudio2SourceVoice* pSourceVoice{ nullptr };
 	pXAudio2->CreateSourceVoice(&pSourceVoice, waveData.wfx);
 
-	// ピッチの初期設定
-	SetPitch(pSourceVoice, 1.0);
-
 	// 音声データのセット
 	XAUDIO2_BUFFER buffer{ 0 };
 	buffer.pAudioData = waveData.startAudio;
@@ -115,22 +143,21 @@ int main()
 
 	// ここまで完了したら文字列を表示
 	printf_s("SoundFile.wavを再生中");
-	
-	// ピッチの設定
-	float pitch = 1.0f;		// ピッチの値
-	float speed = 0.01f;	// ピッチを上下させるスピード
 
 	// 終了まで待機　
 	while (true)
 	{
-		// ピッチを上下させる
-		pitch += speed;
-		if (pitch >= 1.5f || pitch <= 0.0f)
+		// スペースキーで一時停止
+		if (GetKeyState(VK_SPACE) & 0x8000)
 		{
-			speed = -speed;
-			pitch += speed;
+			Pause(pSourceVoice);
 		}
-		SetPitch(pSourceVoice, pitch);
+
+		// エンターキーで一時停止解除
+		if (GetKeyState(VK_RETURN) & 0x8000)
+		{
+			Resume(pSourceVoice, buffer);
+		}
 
 		// 現在の再生時間を求める
 		XAUDIO2_VOICE_STATE state;

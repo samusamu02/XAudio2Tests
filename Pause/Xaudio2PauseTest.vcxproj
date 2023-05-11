@@ -24,7 +24,7 @@
     <ProjectGuid>{7c84bd5e-043e-4dec-bd24-165769d684fa}</ProjectGuid>
     <RootNamespace>Xaudio2Test</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Xaudio2ChangePitchTest</ProjectName>
+    <ProjectName>Xaudio2PauseTest</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
