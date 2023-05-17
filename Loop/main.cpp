@@ -111,7 +111,6 @@ int main()
 	// I—¹‚Ü‚Å‘Ò‹@@
 	while (true)
 	{
-
 		// Œ»İ‚ÌÄ¶ŠÔ‚ğ‹‚ß‚é
 		XAUDIO2_VOICE_STATE state;
 		pSourceVoice->GetState(&state);
