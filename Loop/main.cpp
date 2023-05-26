@@ -61,12 +61,6 @@ void FadeOut(IXAudio2SourceVoice* pSourceVoice, float endVolume, UINT32 fadeDura
 	pSourceVoice->SetVolume(endVolume);
 }
 
-// サディスンループ用のデータ
-struct LoopData
-{
-
-};
-
 int main()
 {
 	printf_s("ループテスト\n");
