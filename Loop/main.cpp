@@ -61,6 +61,31 @@ void FadeOut(IXAudio2SourceVoice* pSourceVoice, float endVolume, UINT32 fadeDura
 	pSourceVoice->SetVolume(endVolume);
 }
 
+/// <summary>
+/// ループ再生
+/// </summary>
+/// <param name="pSouceVoice">ソースボイス</param>
+void LoopAudio(IXAudio2SourceVoice* pSouceVoice)
+{
+	while (true)
+	{
+		// 現在の再生時間を求める
+		XAUDIO2_VOICE_STATE state;
+		pSouceVoice->GetState(&state);
+		XAUDIO2_VOICE_DETAILS details;
+		pSouceVoice->GetVoiceDetails(&details);
+
+		// バッファが再生終了したら再生をループさせる
+		if (state.BuffersQueued == 0 && state.SamplesPlayed > 0)
+		{
+			// 音声の再生
+			pSouceVoice->Start(0);
+		}
+
+		Sleep(10);
+	}
+}
+
 int main()
 {
 	printf_s("ループテスト\n");
@@ -108,33 +133,7 @@ int main()
 	// ここまで完了したら文字列を表示
 	printf_s("SoundFile.wavを再生中");
 
-	// 終了まで待機　
-	while (true)
-	{
-		// 現在の再生時間を求める
-		XAUDIO2_VOICE_STATE state;
-		pSourceVoice->GetState(&state);
-		XAUDIO2_VOICE_DETAILS details;
-		pSourceVoice->GetVoiceDetails(&details);
-		double nowTime = static_cast<double>(state.SamplesPlayed / details.InputSampleRate);
-
-		// どこまで再生するか
-		double maxTime = 5.0;
-
-		// maxTimeを過ぎたらフェードアウトする
-		if (nowTime > maxTime)
-		{
-			FadeOut(pSourceVoice, 0.0f, 100);
-		}
-
-		// バッファー数が0になる、もしくはフェードが完了したらループ抜ける
-		if (state.BuffersQueued == 0 || nowTime > maxTime)
-		{
-			break;
-		}
-
-		Sleep(10);
-	}
+	LoopAudio(pSourceVoice);
 
 	// XAudio2の終了・データの破棄
 	pSourceVoice->DestroyVoice();
